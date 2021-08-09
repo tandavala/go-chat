@@ -19,7 +19,7 @@ func newRoom() *room {
 		forward: make(chan []byte),
 		join: make(chan *client),
 		leave: make(chan *client),
-		clientes: make(map[*client]bool),
+		clients: make(map[*client]bool),
 	}
 }
 
@@ -29,9 +29,9 @@ func (r *room) run(){
 			case client := <-r.join:
 				// joining
 				r.clients[client] = true
-			case cloient := <-r.leave:
+			case client := <-r.leave:
 				// leaving
-				delete(r.clientes, client)
+				delete(r.clients, client)
 				close(client.send)
 			case msg := <-r.forward:
 				// forwarding message to all clients
@@ -58,7 +58,7 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request){
 	client := &client {
 		socket: socket,
 		send:   make(chan []byte, messageBufferSize),
-		room:   r
+		room:   r,
 	}
 	r.join <- client
 	defer func() { r.leave <- client }()
